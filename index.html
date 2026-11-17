@@ -119,26 +119,27 @@ h1.app-title{
 /* ---------- 印刷シート ---------- */
 #print-sheet{display:none;}
 @media print{
-  @page{size:A4 landscape; margin:0;}
+  @page{size:A4 portrait; margin:0;}
   html,body{margin:0 !important; padding:0 !important; background:#fff;}
   .screen{display:none !important;}
   #print-sheet{
-    display:block; width:248mm; height:186mm; margin:0 auto; padding:8mm 9mm;
+    display:block; width:190mm; height:248mm; margin:0 auto; padding:7mm 5mm;
     font-family:"Hiragino Maru Gothic ProN","Hiragino Sans",sans-serif; color:#333;
   }
 }
-.ps-title-row{display:flex; align-items:flex-end; gap:8mm; margin-bottom:5mm;}
-.ps-title{font-size:24pt; font-weight:900; color:#7c3f16;}
-.ps-check{display:flex; align-items:center; gap:3mm; font-size:9pt; color:#7c3f16;}
+.ps-title-row{margin-bottom:4mm;}
+.ps-title{font-size:19pt; font-weight:900; color:#7c3f16;}
+.ps-check{display:flex; align-items:center; gap:3mm; font-size:9pt; color:#7c3f16; justify-content:flex-end; margin-top:2mm;}
 .ps-check .bar{width:50mm; height:5mm; border:1.2pt solid #7c3f16; position:relative;}
 .ps-check .bar::after{content:""; position:absolute; left:25mm; top:0; bottom:0; border-left:.6pt solid #7c3f16;}
-.ps-main{display:flex; gap:8mm;}
-.ps-card{flex:none;}
-.ps-card svg{display:block;}
-.ps-side{flex:1; font-size:11pt; line-height:1.75;}
+.ps-main{display:block;}
+.ps-card{text-align:center;}
+.ps-card svg{display:inline-block;}
+.ps-side{display:flex; gap:7mm; margin-top:5mm; align-items:flex-start; font-size:11pt; line-height:1.75;}
+.ps-howto{flex:1;}
 .ps-side h3{margin:0 0 2mm; font-size:13pt; color:#7c3f16;}
 .ps-side ol{margin:0; padding-left:6mm;}
-.ps-answer{margin-top:5mm;}
+.ps-answer{flex:none; margin-top:0;}
 .ps-answer .cap{font-size:9pt; color:#888; margin-bottom:1.5mm;}
 .ps-answer svg{transform:rotate(180deg); border:.6pt solid #ccc; border-radius:2mm;}
 .ps-foot{margin-top:5mm; font-size:8.5pt; color:#999;}
@@ -163,6 +164,7 @@ h1.app-title{
     3. 両方つながると完成！ 印刷すれば、紙でも遊べます。
   </div>
   <p class="credit">古典パズル「トリック・ロバ」（サム・ロイド）へのオマージュです。<br>絵は同じ仕組みで新しく描いたオリジナルです。</p>
+  <p class="credit">ver.3（型紙はA4縦になりました）</p>
 </div>
 
 <!-- 遊ぶ画面 -->
@@ -182,7 +184,7 @@ h1.app-title{
     <button class="big-btn green" id="btn-print" type="button">印刷する</button>
   </div>
   <div id="hint-box"></div>
-  <p class="note-line">印刷すると、切り取って遊べる型紙になります（A4横）。<br>不具合が出るかもしれません。実際にご使用の際に不具合がありましたらコメント欄からお知らせください。</p>
+  <p class="note-line">印刷すると、切り取って遊べる型紙になります（A4縦）。<br>不具合が出るかもしれません。実際にご使用の際に不具合がありましたらコメント欄からお知らせください。</p>
 </div>
 
 <!-- 印刷シート（印刷時のみ表示） -->
@@ -194,19 +196,21 @@ h1.app-title{
   <div class="ps-main">
     <div class="ps-card" id="ps-card"></div>
     <div class="ps-side">
-      <h3>あそびかた</h3>
-      <ol>
-        <li>点線にそって ハサミで切り、3まいの帯にします。</li>
-        <li>帯をならべかえて、頭が体につく順番をさがします。</li>
-        <li>両方の頭がついたら完成です！</li>
-      </ol>
+      <div class="ps-howto">
+        <h3>あそびかた</h3>
+        <ol>
+          <li>点線にそって ハサミで切り、3まいの帯にします。</li>
+          <li>帯をならべかえて、頭が体につく順番をさがします。</li>
+          <li>両方の頭がついたら完成です！</li>
+        </ol>
+      </div>
       <div class="ps-answer">
         <div class="cap">こたえ（さかさまになっています）</div>
         <div id="ps-answer-art"></div>
       </div>
     </div>
   </div>
-  <div class="ps-foot">トリック絵工房 ― 古典パズル「トリック・ロバ」（サム・ロイド）へのオマージュ。絵はオリジナルです。</div>
+  <div class="ps-foot">トリック絵工房 ― 古典パズル「トリック・ロバ」（サム・ロイド）へのオマージュ。絵はオリジナルです。［型紙 ver.3・A4縦］</div>
 </div>
 
 <script>
@@ -567,7 +571,7 @@ $("btn-hint").addEventListener("click", () => {
 function fillPrint(){
   $("ps-title").textContent = "トリック絵工房「" + SETS[curSet].name + "」";
   $("ps-card").innerHTML = sceneSVG(curSet, "0 0 360 240", true)
-    .replace("<svg ", '<svg width="168mm" height="112mm" ');
+    .replace("<svg ", '<svg width="180mm" height="120mm" ');
   $("ps-answer-art").innerHTML = sceneSVG(curSet, "0 0 360 240", false)
     .replace("<svg ", '<svg width="54mm" height="36mm" ');
 }
