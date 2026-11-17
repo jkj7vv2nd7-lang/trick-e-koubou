@@ -120,10 +120,10 @@ h1.app-title{
 #print-sheet{display:none;}
 @media print{
   @page{size:A4 landscape; margin:0;}
-  body{background:#fff;}
+  html,body{margin:0 !important; padding:0 !important; background:#fff;}
   .screen{display:none !important;}
   #print-sheet{
-    display:block; width:297mm; height:209mm; padding:11mm 12mm;
+    display:block; width:248mm; height:186mm; margin:0 auto; padding:8mm 9mm;
     font-family:"Hiragino Maru Gothic ProN","Hiragino Sans",sans-serif; color:#333;
   }
 }
@@ -567,9 +567,9 @@ $("btn-hint").addEventListener("click", () => {
 function fillPrint(){
   $("ps-title").textContent = "トリック絵工房「" + SETS[curSet].name + "」";
   $("ps-card").innerHTML = sceneSVG(curSet, "0 0 360 240", true)
-    .replace("<svg ", '<svg width="180mm" height="120mm" ');
+    .replace("<svg ", '<svg width="168mm" height="112mm" ');
   $("ps-answer-art").innerHTML = sceneSVG(curSet, "0 0 360 240", false)
-    .replace("<svg ", '<svg width="62mm" height="41.3mm" ');
+    .replace("<svg ", '<svg width="54mm" height="36mm" ');
 }
 $("btn-print").addEventListener("click", () => { fillPrint(); setTimeout(() => window.print(), 60); });
 window.addEventListener("beforeprint", fillPrint);
