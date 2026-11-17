@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>トリック絵工房</title>
+<meta name="description" content="3枚の帯を並べ替えると絵が完成する、サム・ロイドの古典パズル「トリック・ロバ」へのオマージュ。ロバと騎手、ねこと子ども、2つの絵柄で遊べます。印刷して紙でも遊べます。">
+<meta property="og:title" content="トリック絵工房">
+<meta property="og:description" content="3枚の帯を並べ替えると、騎手がロバに乗る絵が完成します。古典パズルへのオマージュ＆オリジナル絵柄。">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://jkj7vv2nd7-lang.github.io/trick-e-koubou/og-image.png">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+:root{
+  --ink:#43302b; --paper:#fff7ea; --accent:#d96f32; --accent2:#2e7d6b;
+  --card:#fffdf8; --line:#e5cfa8;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+html,body{margin:0; padding:0;}
+body{
+  font-family:"Hiragino Maru Gothic ProN","Hiragino Sans","Noto Sans JP",sans-serif;
+  background:linear-gradient(180deg,#ffe9c9 0%,#fff7ea 55%,#ffeeda 100%);
+  color:var(--ink); min-height:100vh;
+}
+button{font-family:inherit; cursor:pointer;}
+.screen{display:none; max-width:560px; margin:0 auto; padding:16px 14px 40px;}
+.screen.on{display:block;}
+
+/* ---------- タイトル ---------- */
+#scr-title{text-align:center; padding-top:26px;}
+.logo-badge{
+  display:inline-block; background:var(--accent); color:#fff; font-weight:700;
+  padding:4px 14px; border-radius:999px; font-size:13px; letter-spacing:.12em;
+  box-shadow:0 3px 0 #b3541f;
+}
+h1.app-title{
+  font-size:40px; margin:14px 0 4px; letter-spacing:.06em; color:#7c3f16;
+  text-shadow:0 2px 0 #ffd9a8;
+}
+.sub{font-size:15px; color:#8a6a4d; margin:0 0 18px;}
+.demo-card{
+  background:var(--card); border:3px solid var(--line); border-radius:18px;
+  padding:12px; box-shadow:0 6px 18px rgba(150,100,40,.15); margin-bottom:20px;
+}
+.demo-card svg{width:100%; height:auto; display:block; border-radius:10px;}
+.demo-cap{font-size:13px; color:#8a6a4d; margin-top:8px;}
+.set-list{display:flex; flex-direction:column; gap:12px;}
+.set-btn{
+  display:flex; align-items:center; gap:14px; text-align:left;
+  background:var(--card); border:3px solid var(--line); border-radius:16px;
+  padding:10px 14px; box-shadow:0 4px 0 #e8d3ac;
+}
+.set-btn:active{transform:translateY(2px); box-shadow:0 2px 0 #e8d3ac;}
+.set-btn svg{width:118px; height:auto; flex:none; border-radius:8px;}
+.set-btn .nm{font-size:20px; font-weight:700; color:#7c3f16;}
+.set-btn .ds{font-size:13px; color:#8a6a4d; margin-top:2px;}
+.howto{
+  margin-top:22px; background:#fffdf8; border:2px dashed var(--line);
+  border-radius:14px; padding:12px 16px; text-align:left; font-size:14px; line-height:1.8;
+}
+.howto b{color:#7c3f16;}
+.credit{margin-top:16px; font-size:12px; color:#a08668; line-height:1.7;}
+
+/* ---------- 遊ぶ画面 ---------- */
+.play-head{display:flex; align-items:center; gap:10px; margin-bottom:10px;}
+.play-head .ttl{font-size:22px; font-weight:700; color:#7c3f16; flex:1;}
+.small-btn{
+  background:#fffdf8; border:2.5px solid var(--line); border-radius:999px;
+  padding:7px 14px; font-size:14px; font-weight:700; color:#7c3f16;
+  box-shadow:0 3px 0 #e8d3ac;
+}
+.small-btn:active{transform:translateY(2px); box-shadow:0 1px 0 #e8d3ac;}
+#board-wrap{position:relative;}
+#board{
+  display:flex; gap:10px; padding:12px; background:var(--card);
+  border:3px solid var(--line); border-radius:18px;
+  box-shadow:0 6px 18px rgba(150,100,40,.15);
+  touch-action:none; user-select:none; -webkit-user-select:none;
+}
+#board.tight{gap:0; padding:12px;}
+.strip{
+  flex:1 1 0; border-radius:8px; overflow:hidden; position:relative;
+  box-shadow:0 2px 6px rgba(120,80,30,.25); background:#bfe6f5;
+  transition:transform .18s ease;
+}
+.strip svg{width:100%; height:auto; display:block; pointer-events:none;}
+.strip.dragging{transition:none; z-index:5; box-shadow:0 10px 24px rgba(120,80,30,.4);}
+.strip.joined-l{box-shadow:-7px 0 14px -2px rgba(255,190,60,.95), 0 2px 6px rgba(120,80,30,.25);}
+.strip.joined-r{box-shadow:7px 0 14px -2px rgba(255,190,60,.95), 0 2px 6px rgba(120,80,30,.25);}
+.msg{
+  min-height:30px; text-align:center; font-size:17px; font-weight:700;
+  color:#7c3f16; margin:12px 0 4px;
+}
+.msg .sub2{display:block; font-size:13px; font-weight:400; color:#8a6a4d; margin-top:2px;}
+.btn-row{display:flex; flex-wrap:wrap; gap:10px; justify-content:center; margin-top:10px;}
+.big-btn{
+  border:none; border-radius:999px; padding:13px 22px; font-size:16px; font-weight:700;
+  background:var(--accent); color:#fff; box-shadow:0 4px 0 #b3541f;
+}
+.big-btn:active{transform:translateY(2px); box-shadow:0 2px 0 #b3541f;}
+.big-btn.green{background:var(--accent2); box-shadow:0 4px 0 #1d5749;}
+.big-btn.green:active{box-shadow:0 2px 0 #1d5749;}
+.big-btn.ghost{background:#fffdf8; color:#7c3f16; border:2.5px solid var(--line); box-shadow:0 4px 0 #e8d3ac;}
+#hint-box{margin-top:14px; text-align:center; display:none;}
+#hint-box svg{width:min(300px,80%); height:auto; border-radius:10px; border:2.5px solid var(--line);}
+#stamp{
+  position:absolute; top:6px; right:10px; z-index:8; display:none;
+  border:4px solid #d23c2a; color:#d23c2a; font-weight:900; font-size:26px;
+  padding:4px 14px; border-radius:10px; transform:rotate(10deg);
+  background:rgba(255,250,240,.85); letter-spacing:.2em;
+}
+.sparkle{position:absolute; z-index:7; font-size:22px; pointer-events:none; animation:spark 1s ease-out forwards;}
+@keyframes spark{0%{transform:scale(.4); opacity:0;} 30%{opacity:1;} 100%{transform:scale(1.5) translateY(-16px); opacity:0;}}
+.bounce{animation:bounce .7s ease;}
+@keyframes bounce{0%,100%{transform:translateY(0);} 30%{transform:translateY(-10px);} 55%{transform:translateY(0);} 75%{transform:translateY(-5px);}}
+.note-line{margin-top:16px; font-size:12px; color:#a08668; text-align:center; line-height:1.7;}
+
+/* ---------- 印刷シート ---------- */
+#print-sheet{display:none;}
+@media print{
+  @page{size:A4 landscape; margin:0;}
+  body{background:#fff;}
+  .screen{display:none !important;}
+  #print-sheet{
+    display:block; width:297mm; height:209mm; padding:11mm 12mm;
+    font-family:"Hiragino Maru Gothic ProN","Hiragino Sans",sans-serif; color:#333;
+  }
+}
+.ps-title-row{display:flex; align-items:flex-end; gap:8mm; margin-bottom:5mm;}
+.ps-title{font-size:24pt; font-weight:900; color:#7c3f16;}
+.ps-check{display:flex; align-items:center; gap:3mm; font-size:9pt; color:#7c3f16;}
+.ps-check .bar{width:50mm; height:5mm; border:1.2pt solid #7c3f16; position:relative;}
+.ps-check .bar::after{content:""; position:absolute; left:25mm; top:0; bottom:0; border-left:.6pt solid #7c3f16;}
+.ps-main{display:flex; gap:8mm;}
+.ps-card{flex:none;}
+.ps-card svg{display:block;}
+.ps-side{flex:1; font-size:11pt; line-height:1.75;}
+.ps-side h3{margin:0 0 2mm; font-size:13pt; color:#7c3f16;}
+.ps-side ol{margin:0; padding-left:6mm;}
+.ps-answer{margin-top:5mm;}
+.ps-answer .cap{font-size:9pt; color:#888; margin-bottom:1.5mm;}
+.ps-answer svg{transform:rotate(180deg); border:.6pt solid #ccc; border-radius:2mm;}
+.ps-foot{margin-top:5mm; font-size:8.5pt; color:#999;}
+</style>
+</head>
+<body>
+
+<!-- タイトル画面 -->
+<div class="screen on" id="scr-title">
+  <span class="logo-badge">パズル工作アプリ</span>
+  <h1 class="app-title">トリック絵工房</h1>
+  <p class="sub">3まいの帯を ならべかえると、絵が完成します</p>
+  <div class="demo-card">
+    <div id="demo-art"></div>
+    <div class="demo-cap">帯を入れかえると… あらふしぎ、騎手がロバに乗りました</div>
+  </div>
+  <div class="set-list" id="set-list"></div>
+  <div class="howto">
+    <b>あそびかた</b><br>
+    1. 絵柄をえらんで、帯を指でドラッグして入れかえます。<br>
+    2. ロバ（ねこ）の頭が体につくと「カチッ」と光ります。<br>
+    3. 両方つながると完成！ 印刷すれば、紙でも遊べます。
+  </div>
+  <p class="credit">古典パズル「トリック・ロバ」（サム・ロイド）へのオマージュです。<br>絵は同じ仕組みで新しく描いたオリジナルです。</p>
+</div>
+
+<!-- 遊ぶ画面 -->
+<div class="screen" id="scr-play">
+  <div class="play-head">
+    <span class="ttl" id="play-title">ロバと騎手</span>
+    <button class="small-btn" id="btn-home" type="button">絵柄を変える</button>
+  </div>
+  <div id="board-wrap">
+    <div id="board"></div>
+    <div id="stamp">できた！</div>
+  </div>
+  <p class="msg" id="msg">帯をドラッグして 入れかえてみましょう<span class="sub2">ロバの頭が 体につく順番が あるはずです</span></p>
+  <div class="btn-row">
+    <button class="big-btn" id="btn-shuffle" type="button">まぜる</button>
+    <button class="big-btn ghost" id="btn-hint" type="button">お手本を見る</button>
+    <button class="big-btn green" id="btn-print" type="button">印刷する</button>
+  </div>
+  <div id="hint-box"></div>
+  <p class="note-line">印刷すると、切り取って遊べる型紙になります（A4横）。<br>不具合が出るかもしれません。実際にご使用の際に不具合がありましたらコメント欄からお知らせください。</p>
+</div>
+
+<!-- 印刷シート（印刷時のみ表示） -->
+<div id="print-sheet">
+  <div class="ps-title-row">
+    <div class="ps-title" id="ps-title">トリック絵工房</div>
+    <div class="ps-check"><span class="bar"></span><span>この線が5cmなら 印刷は正確です</span></div>
+  </div>
+  <div class="ps-main">
+    <div class="ps-card" id="ps-card"></div>
+    <div class="ps-side">
+      <h3>あそびかた</h3>
+      <ol>
+        <li>点線にそって ハサミで切り、3まいの帯にします。</li>
+        <li>帯をならべかえて、頭が体につく順番をさがします。</li>
+        <li>両方の頭がついたら完成です！</li>
+      </ol>
+      <div class="ps-answer">
+        <div class="cap">こたえ（さかさまになっています）</div>
+        <div id="ps-answer-art"></div>
+      </div>
+    </div>
+  </div>
+  <div class="ps-foot">トリック絵工房 ― 古典パズル「トリック・ロバ」（サム・ロイド）へのオマージュ。絵はオリジナルです。</div>
+</div>
+
+<script>
+"use strict";
+/* ================= 絵柄（SVG） =================
+   完成図を 360×240 の1枚絵として描き、x=120 / 240 で3枚に切り分ける。
+   左から R・M・L と名付け、完成の並びは R,M,L。
+   動物は左向きに描き、右半分は鏡写しで使い回す（模様・色はCSS変数で変える）。 */
+const VIEW = { R: "0 0 120 240", M: "120 0 120 240", L: "240 0 120 240" };
+
+function backgroundSVG(){
+  let g = "";
+  g += '<rect x="0" y="0" width="360" height="240" fill="#aee3f7"/>';
+  g += '<circle cx="322" cy="34" r="13" fill="#ffd94d"/>';
+  g += '<g stroke="#ffd94d" stroke-width="3" stroke-linecap="round">'
+     + '<line x1="322" y1="12" x2="322" y2="17"/><line x1="322" y1="51" x2="322" y2="56"/>'
+     + '<line x1="300" y1="34" x2="305" y2="34"/><line x1="339" y1="34" x2="344" y2="34"/>'
+     + '<line x1="306" y1="18" x2="310" y2="22"/><line x1="334" y1="46" x2="338" y2="50"/>'
+     + '<line x1="338" y1="18" x2="334" y2="22"/><line x1="310" y1="46" x2="306" y2="50"/></g>';
+  const cloud = (cx, cy, s) =>
+    '<g fill="#ffffff" opacity="0.92"><ellipse cx="' + cx + '" cy="' + cy + '" rx="' + (22*s) + '" ry="' + (9*s) + '"/>'
+    + '<ellipse cx="' + (cx+12*s) + '" cy="' + (cy-5*s) + '" rx="' + (15*s) + '" ry="' + (8*s) + '"/>'
+    + '<ellipse cx="' + (cx-13*s) + '" cy="' + (cy-3*s) + '" rx="' + (13*s) + '" ry="' + (7*s) + '"/></g>';
+  g += cloud(38, 36, 1) + cloud(184, 24, 0.8) + cloud(298, 62, 0.65);
+  g += '<rect x="0" y="168" width="360" height="72" fill="#8fce6e"/>';
+  g += '<rect x="0" y="198" width="360" height="42" fill="#7cbb54"/>';
+  const tuft = (x, y) => '<g stroke="#5da244" stroke-width="2" stroke-linecap="round" fill="none">'
+    + '<path d="M' + x + ',' + y + ' q-2,-7 -5,-9"/><path d="M' + (x+4) + ',' + y + ' q0,-8 2,-11"/><path d="M' + (x+8) + ',' + y + ' q2,-6 6,-8"/></g>';
+  g += tuft(18, 196) + tuft(52, 204) + tuft(204, 194) + tuft(262, 200) + tuft(330, 206);
+  const flower = (x, y, c) => '<g><circle cx="' + x + '" cy="' + y + '" r="2.6" fill="' + c + '"/><circle cx="' + x + '" cy="' + y + '" r="1" fill="#fff"/></g>';
+  g += flower(30, 222, "#ff8fab") + flower(70, 230, "#ffd94d") + flower(292, 224, "#ff8fab") + flower(338, 232, "#ffffff");
+  return g;
+}
+function captionSVG(text){
+  return '<rect x="126" y="206" width="108" height="27" rx="8" fill="#fff8ec" stroke="#c99e5f" stroke-width="2"/>'
+    + '<text x="180" y="224.5" text-anchor="middle" font-size="13.5" font-weight="700" fill="#7a5320" letter-spacing="2">' + text + '</text>';
+}
+function cutsSVG(){
+  return '<g stroke="#8a8a8a" stroke-width="1.6" stroke-dasharray="7 6" fill="none">'
+    + '<line x1="120" y1="0" x2="120" y2="240"/><line x1="240" y1="0" x2="240" y2="240"/>'
+    + '<rect x="1" y="1" width="358" height="238"/></g>'
+    + '<text x="112" y="18" font-size="14" fill="#8a8a8a">✂</text>'
+    + '<text x="232" y="18" font-size="14" fill="#8a8a8a">✂</text>';
+}
+
+/* --- ロバ＋騎手（左向き） --- */
+function donkeyGroup(){
+  let g = "";
+  g += '<path d="M175,110 C189,116 192,132 185,150" stroke="var(--dark)" stroke-width="5" fill="none" stroke-linecap="round"/>';
+  g += '<ellipse cx="184" cy="155" rx="5" ry="9" fill="var(--dark)"/>';
+  g += '<g fill="var(--dark)" opacity="0.4"><rect x="131" y="138" width="6" height="54" rx="3"/><rect x="159" y="138" width="6" height="54" rx="3"/></g>';
+  g += '<ellipse cx="150" cy="128" rx="28" ry="22" fill="var(--body)"/>';
+  g += '<ellipse cx="150" cy="135" rx="21" ry="13" fill="var(--belly)"/>';
+  g += '<polygon points="131,103 116,93 116,123 133,127" fill="var(--body)"/>';
+  g += '<rect x="124" y="140" width="7" height="54" rx="3" fill="var(--body)"/>';
+  g += '<rect x="167" y="140" width="7" height="54" rx="3" fill="var(--body)"/>';
+  g += '<rect x="123" y="190" width="9" height="7" rx="2" fill="var(--dark)"/>';
+  g += '<rect x="166" y="190" width="9" height="7" rx="2" fill="var(--dark)"/>';
+  g += '<path d="M131,104 C124,98 120,95 117,93" stroke="var(--dark)" stroke-width="4" fill="none" stroke-linecap="round"/>';
+  g += '<rect x="133" y="101" width="27" height="20" rx="4" fill="var(--blanket)"/>';
+  g += '<rect x="133" y="116" width="27" height="4" fill="#ffffff" opacity="0.35"/>';
+  g += '<path d="M139,101 a8,5 0 0 1 16,0 z" fill="#8a5a33"/>';
+  /* 騎手 */
+  g += '<polyline points="147,100 137,116 134,133" stroke="var(--pants)" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
+  g += '<ellipse cx="133" cy="137" rx="6" ry="4" fill="#4a3826"/>';
+  g += '<polygon points="141,102 156,102 153,63 142,63" fill="var(--shirt)" stroke="var(--shirt)" stroke-width="3" stroke-linejoin="round"/>';
+  g += '<polyline points="146,71 136,84 127,93" stroke="var(--shirt)" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
+  g += '<circle cx="126" cy="94" r="3.5" fill="#ffd9b3"/>';
+  g += '<path d="M126,94 L118,100" stroke="#6b4a2a" stroke-width="1.6"/>';
+  g += '<circle cx="148" cy="49" r="11" fill="#ffd9b3"/>';
+  g += '<path d="M137,48 A11,11 0 0 1 159,48 Z" fill="var(--cap)"/>';
+  g += '<rect x="133" y="45.5" width="14" height="3.6" rx="1.8" fill="var(--cap)"/>';
+  g += '<circle cx="143.5" cy="49" r="1.4" fill="#43302b"/>';
+  g += '<path d="M141,54 q3,2.5 6,1" stroke="#43302b" stroke-width="1.2" fill="none" stroke-linecap="round"/>';
+  /* 頭（帯Rの中、継ぎ目は x=120） */
+  g += '<polygon points="122,93 106,86 102,120 122,124" fill="var(--body)"/>';
+  g += '<path d="M118,90 C112,88 108,86 105,85" stroke="var(--dark)" stroke-width="4" fill="none" stroke-linecap="round"/>';
+  g += '<path d="M108,68 C106,52 110,42 116,40 C121,42 120,56 116,68 Z" fill="var(--body)"/>';
+  g += '<path d="M110,64 C109,54 111,47 114,45 C117,47 116,56 114,65 Z" fill="#d9a08c"/>';
+  g += '<path d="M97,67 C93,53 96,43 101,41 C106,43 106,57 103,68 Z" fill="var(--body)"/>';
+  g += '<path d="M98,63 C96,54 97,47 100,45 C103,47 102,55 101,64 Z" fill="#d9a08c"/>';
+  g += '<ellipse cx="99" cy="79" rx="13" ry="12" fill="var(--body)"/>';
+  g += '<polygon points="93,82 79,98 80,111 94,115 103,101 103,85" fill="var(--body)"/>';
+  g += '<ellipse cx="86" cy="106" rx="7.5" ry="6" fill="var(--belly)"/>';
+  g += '<circle cx="82" cy="104" r="1.6" fill="var(--dark)"/>';
+  g += '<path d="M80,111 q5,3 10,1" stroke="var(--dark)" stroke-width="1.4" fill="none" stroke-linecap="round"/>';
+  g += '<path d="M96,66 q6,-6 12,0 q-2,-5 -6,-5 q-4,0 -6,5" fill="var(--dark)"/>';
+  g += '<circle cx="97" cy="79" r="2.3" fill="#33241c"/><circle cx="97.8" cy="78.2" r="0.8" fill="#ffffff"/>';
+  return '<g>' + g + '</g>';
+}
+function donkeyScene(view, caption, cuts){
+  const a = '--body:#a89a8c;--belly:#c9bcac;--dark:#6e6156;--blanket:#d94f3d;--shirt:#3d7bd9;--pants:#33506e;--cap:#d94f3d;';
+  const b = '--body:#8f8578;--belly:#b3a894;--dark:#5d5348;--blanket:#2e8f83;--shirt:#e8a13d;--pants:#5b3a6e;--cap:#2e8f83;';
+  return '<svg viewBox="' + view + '" xmlns="http://www.w3.org/2000/svg" role="img">'
+    + backgroundSVG()
+    + '<g style="' + a + '">' + donkeyGroup() + '</g>'
+    + '<g transform="translate(360,0) scale(-1,1)" style="' + b + '">' + donkeyGroup() + '</g>'
+    + captionSVG(caption)
+    + (cuts ? cutsSVG() : '')
+    + '</svg>';
+}
+
+/* --- ねこ＋子ども（左向き） --- */
+function catGroup(uid){
+  let g = "";
+  g += '<path d="M176,116 C193,108 196,80 184,58" stroke="var(--body)" stroke-width="8" fill="none" stroke-linecap="round"/>';
+  g += '<g fill="var(--dark)" opacity="0.3"><rect x="131" y="140" width="7" height="52" rx="3.5"/><rect x="159" y="140" width="7" height="52" rx="3.5"/></g>';
+  g += '<clipPath id="cb-' + uid + '"><ellipse cx="150" cy="130" rx="28" ry="20"/></clipPath>';
+  g += '<ellipse cx="150" cy="130" rx="28" ry="20" fill="var(--body)"/>';
+  g += '<g clip-path="url(#cb-' + uid + ')" stroke="var(--stripe)" stroke-width="4" fill="none" stroke-linecap="round">'
+     + '<path d="M136,110 q3,12 0,24"/><path d="M149,108 q3,14 0,26"/><path d="M162,110 q3,12 0,24"/></g>';
+  g += '<ellipse cx="150" cy="139" rx="15" ry="8" fill="var(--belly)"/>';
+  g += '<polygon points="131,106 117,96 117,122 133,126" fill="var(--body)"/>';
+  g += '<rect x="124" y="142" width="8" height="50" rx="4" fill="var(--body)"/>';
+  g += '<rect x="166" y="142" width="8" height="50" rx="4" fill="var(--body)"/>';
+  g += '<ellipse cx="127" cy="193" rx="6.5" ry="4" fill="var(--belly)"/>';
+  g += '<ellipse cx="170" cy="193" rx="6.5" ry="4" fill="var(--belly)"/>';
+  g += '<rect x="134" y="104" width="26" height="18" rx="5" fill="var(--blanket)"/>';
+  g += '<g fill="#ffffff" opacity="0.55"><circle cx="141" cy="111" r="2"/><circle cx="150" cy="115" r="2"/><circle cx="155" cy="109" r="2"/></g>';
+  /* 子ども */
+  g += '<polyline points="147,102 137,117 134,134" stroke="var(--pants)" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
+  g += '<ellipse cx="133" cy="138" rx="6" ry="4" fill="#4a3826"/>';
+  g += '<polygon points="141,104 156,104 153,65 142,65" fill="var(--shirt)" stroke="var(--shirt)" stroke-width="3" stroke-linejoin="round"/>';
+  g += '<polyline points="147,72 156,58 161,45" stroke="var(--shirt)" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
+  g += '<circle cx="162" cy="43" r="3.5" fill="#ffd9b3"/>';
+  g += '<polyline points="145,76 138,92 135,101" stroke="var(--shirt)" stroke-width="6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>';
+  g += '<circle cx="148" cy="50" r="11" fill="#ffd9b3"/>';
+  g += '<path d="M137,47 A11,11 0 0 1 159,47 Z" fill="var(--hair)"/>';
+  g += '<rect x="155" y="45" width="5" height="12" rx="2.5" fill="var(--hair)"/>';
+  g += '<circle cx="143.5" cy="51" r="1.4" fill="#43302b"/>';
+  g += '<path d="M141,56 q3,2.5 6,1" stroke="#43302b" stroke-width="1.2" fill="none" stroke-linecap="round"/>';
+  /* 頭（帯Rの中、継ぎ目は x=120） */
+  g += '<polygon points="122,96 108,88 104,120 122,123" fill="var(--body)"/>';
+  g += '<polygon points="86,78 88,57 101,70" fill="var(--body)"/>';
+  g += '<polygon points="89,73 90,63 98,70" fill="#f2a0a0"/>';
+  g += '<polygon points="102,72 111,55 117,75" fill="var(--body)"/>';
+  g += '<polygon points="105,71 110,61 114,73" fill="#f2a0a0"/>';
+  g += '<circle cx="99" cy="88" r="16" fill="var(--body)"/>';
+  g += '<path d="M97,73 q2,4 0,8" stroke="var(--stripe)" stroke-width="2.5" fill="none" stroke-linecap="round"/>';
+  g += '<ellipse cx="86" cy="95" rx="9" ry="7" fill="var(--belly)"/>';
+  g += '<polygon points="79,91 86,91 82.5,96.5" fill="#e56b7a"/>';
+  g += '<path d="M82.5,96.5 q0,4 -4.5,5 M82.5,96.5 q0,4 4.5,5" stroke="#b3543f" stroke-width="1.2" fill="none" stroke-linecap="round"/>';
+  g += '<ellipse cx="95" cy="85" rx="2" ry="3" fill="#33241c"/><circle cx="95.7" cy="83.8" r="0.8" fill="#ffffff"/>';
+  g += '<g stroke="#ffffff" stroke-width="1.3" opacity="0.9" stroke-linecap="round">'
+     + '<line x1="79" y1="92" x2="63" y2="87"/><line x1="79" y1="96" x2="62" y2="96"/><line x1="79" y1="100" x2="64" y2="105"/></g>';
+  return '<g>' + g + '</g>';
+}
+function catScene(view, caption, cuts, uid){
+  const a = '--body:#f2a541;--belly:#ffe3c2;--stripe:#d9822b;--dark:#b06a1e;--blanket:#ef6461;--shirt:#ef6461;--pants:#33506e;--hair:#3a2a20;';
+  const b = '--body:#9aa3ad;--belly:#e8ecf0;--stripe:#6e7883;--dark:#5d666f;--blanket:#4f9de0;--shirt:#4f9de0;--pants:#6e3a3a;--hair:#5a3a1e;';
+  return '<svg viewBox="' + view + '" xmlns="http://www.w3.org/2000/svg" role="img">'
+    + backgroundSVG()
+    + '<g style="' + a + '">' + catGroup(uid + "a") + '</g>'
+    + '<g transform="translate(360,0) scale(-1,1)" style="' + b + '">' + catGroup(uid + "b") + '</g>'
+    + captionSVG(caption)
+    + (cuts ? cutsSVG() : '')
+    + '</svg>';
+}
+
+const SETS = {
+  donkey: { name: "ロバと騎手", desc: "古典パズルの絵柄。騎手がロバに乗ります", caption: "ロバと騎手",
+    sub: "ロバの頭が 体につく順番が あるはずです",
+    scene: (view, cuts, uid) => donkeyScene(view, "ロバと騎手", cuts) },
+  cat: { name: "ねこと子ども", desc: "大きな猫に 子どもが乗ります", caption: "ねこと子ども",
+    sub: "ねこの頭が 体につく順番が あるはずです",
+    scene: (view, cuts, uid) => catScene(view, "ねこと子ども", cuts, uid || "x") },
+};
+let uidSeq = 0;
+function sceneSVG(setId, view, cuts){
+  return SETS[setId].scene(view, !!cuts, "u" + (++uidSeq));
+}
+
+/* ================= 音 ================= */
+let AC = null;
+function ac(){ if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === "suspended") AC.resume(); return AC; }
+function tone(freq, delay, dur, type, vol){
+  try{
+    const c = ac(), t = c.currentTime + delay;
+    const o = c.createOscillator(), g = c.createGain();
+    o.type = type || "triangle"; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol || 0.2, t + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + dur + 0.05);
+  }catch(e){}
+}
+const sndPick = () => tone(1318, 0, 0.07, "triangle", 0.15);
+const sndDrop = () => { tone(988, 0, 0.07, "triangle", 0.18); tone(1318, 0.05, 0.07, "triangle", 0.18); };
+const sndJoin = () => { tone(1760, 0, 0.035, "square", 0.12); tone(1760, 0.055, 0.05, "square", 0.12); };
+const sndFanfare = () => { [1318, 1568, 2093, 1568, 2093, 2637].forEach((f, i) => tone(f, i * 0.11, 0.22, "triangle", 0.2)); tone(1318, 0.68, 0.5, "triangle", 0.12); tone(1568, 0.68, 0.5, "triangle", 0.12); tone(2093, 0.68, 0.55, "triangle", 0.14); };
+
+/* ================= ゲーム ================= */
+const SOLVED = ["R", "M", "L"];
+let curSet = "donkey";
+let order = ["L", "M", "R"];
+let solved = false;
+const $ = id => document.getElementById(id);
+const board = $("board"), msgEl = $("msg");
+
+function joinsOf(ord){
+  const j = { A: false, B: false };
+  for (let i = 0; i < 2; i++){
+    if (ord[i] === "R" && ord[i+1] === "M") j.A = true;
+    if (ord[i] === "M" && ord[i+1] === "L") j.B = true;
+  }
+  return j;
+}
+function renderBoard(){
+  board.innerHTML = "";
+  const j = joinsOf(order);
+  order.forEach((piece, idx) => {
+    const d = document.createElement("div");
+    d.className = "strip"; d.dataset.piece = piece; d.dataset.idx = idx;
+    d.innerHTML = sceneSVG(curSet, VIEW[piece], false);
+    let shadow = "0 2px 6px rgba(120,80,30,.25)";
+    const leftGlow = (idx > 0) && ((order[idx-1] === "R" && piece === "M") || (order[idx-1] === "M" && piece === "L"));
+    const rightGlow = (idx < 2) && ((piece === "R" && order[idx+1] === "M") || (piece === "M" && order[idx+1] === "L"));
+    const parts = [];
+    if (leftGlow) parts.push("-8px 0 14px -2px rgba(255,190,60,.95)");
+    if (rightGlow) parts.push("8px 0 14px -2px rgba(255,190,60,.95)");
+    if (parts.length) shadow = parts.join(", ") + ", " + shadow;
+    d.style.boxShadow = shadow;
+    board.appendChild(d);
+  });
+  board.classList.toggle("tight", solved);
+  $("stamp").style.display = solved ? "block" : "none";
+}
+function setMsg(main, sub){
+  msgEl.innerHTML = main + (sub ? '<span class="sub2">' + sub + '</span>' : "");
+}
+function afterMove(prevJoins){
+  const j = joinsOf(order);
+  const wasSolved = solved;
+  solved = order.join() === SOLVED.join();
+  if (solved && !wasSolved){
+    renderBoard();
+    board.classList.remove("bounce"); void board.offsetWidth; board.classList.add("bounce");
+    sparkle();
+    sndFanfare();
+    setMsg("完成！ 両方の頭が つながりました", "印刷して、紙でも遊んでみましょう");
+    return;
+  }
+  renderBoard();
+  if (!solved && wasSolved) setMsg("帯をドラッグして 入れかえてみましょう", SETS[curSet].sub);
+  else if ((j.A && !prevJoins.A) || (j.B && !prevJoins.B)){
+    sndJoin();
+    setMsg("カチッ！ 頭がつながりました", j.A && j.B ? "" : "もう片方も つなげてみましょう");
+  }
+  else if (!j.A && !j.B) setMsg("帯をドラッグして 入れかえてみましょう", SETS[curSet].sub);
+  else setMsg("その調子！", "もう片方も つなげてみましょう");
+}
+function sparkle(){
+  const wrap = $("board-wrap");
+  for (let i = 0; i < 9; i++){
+    const s = document.createElement("span");
+    s.className = "sparkle"; s.textContent = "✦";
+    s.style.left = (8 + Math.random() * 84) + "%";
+    s.style.top = (Math.random() * 55) + "%";
+    s.style.color = ["#ffb020", "#ff7847", "#2e7d6b"][i % 3];
+    wrap.appendChild(s);
+    setTimeout(() => s.remove(), 1100);
+  }
+}
+function shuffle(){
+  const perms = [["L","M","R"],["L","R","M"],["M","L","R"],["M","R","L"],["R","L","M"]];
+  let next = perms[Math.floor(Math.random() * perms.length)];
+  if (next.join() === order.join()) next = perms[(perms.indexOf(next) + 1) % perms.length];
+  const pj = joinsOf(order);
+  order = next; solved = false;
+  renderBoard();
+  setMsg("まぜました。頭がつく順番を さがしましょう", SETS[curSet].sub);
+  sndDrop();
+}
+
+/* --- ドラッグ（受け手は window 側） --- */
+let drag = null;
+board.addEventListener("pointerdown", e => {
+  const el = e.target.closest(".strip");
+  if (!el || drag) return;
+  const idx = +el.dataset.idx;
+  drag = { el, idx, startX: e.clientX, w: el.offsetWidth, gap: solved ? 0 : 10, target: idx, moved: false };
+  el.classList.add("dragging");
+  sndPick();
+  e.preventDefault();
+});
+window.addEventListener("pointermove", e => {
+  if (!drag) return;
+  const dx = e.clientX - drag.startX;
+  if (Math.abs(dx) > 4) drag.moved = true;
+  drag.el.style.transform = "translateX(" + dx + "px)";
+  const step = drag.w + drag.gap;
+  let t = drag.idx + Math.round(dx / step);
+  t = Math.max(0, Math.min(2, t));
+  drag.target = t;
+  [...board.children].forEach((c, i) => {
+    if (c === drag.el) return;
+    let shift = 0;
+    if (drag.idx < t && i > drag.idx && i <= t) shift = -step;
+    if (drag.idx > t && i < drag.idx && i >= t) shift = step;
+    c.style.transform = shift ? "translateX(" + shift + "px)" : "";
+  });
+});
+window.addEventListener("pointerup", () => {
+  if (!drag) return;
+  const { idx, target } = drag;
+  const el = drag.el; drag = null;
+  el.classList.remove("dragging");
+  [...board.children].forEach(c => c.style.transform = "");
+  if (target !== idx){
+    const pj = joinsOf(order);
+    const piece = order.splice(idx, 1)[0];
+    order.splice(target, 0, piece);
+    sndDrop();
+    afterMove(pj);
+  } else {
+    renderBoard();
+  }
+});
+window.addEventListener("pointercancel", () => { if (drag){ drag = null; renderBoard(); } });
+
+/* ================= 画面遷移・ボタン ================= */
+function show(id){
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("on"));
+  $(id).classList.add("on");
+  window.scrollTo(0, 0);
+}
+function startPlay(setId){
+  curSet = setId;
+  try{ localStorage.setItem("trick-e-set", setId); }catch(e){}
+  order = ["L", "M", "R"]; solved = false;
+  $("play-title").textContent = SETS[setId].name;
+  $("hint-box").style.display = "none";
+  renderBoard();
+  setMsg("帯をドラッグして 入れかえてみましょう", SETS[setId].sub);
+  show("scr-play");
+}
+const setList = $("set-list");
+Object.keys(SETS).forEach(id => {
+  const b = document.createElement("button");
+  b.className = "set-btn"; b.type = "button";
+  b.innerHTML = sceneSVG(id, "0 0 360 240", false)
+    + '<span><span class="nm">' + SETS[id].name + '</span><span class="ds" style="display:block">' + SETS[id].desc + '</span></span>';
+  b.addEventListener("click", () => { ac(); startPlay(id); });
+  setList.appendChild(b);
+});
+$("demo-art").innerHTML = sceneSVG("donkey", "0 0 360 240", false);
+$("btn-home").addEventListener("click", () => show("scr-title"));
+$("btn-shuffle").addEventListener("click", shuffle);
+$("btn-hint").addEventListener("click", () => {
+  const box = $("hint-box");
+  if (box.style.display === "block"){ box.style.display = "none"; return; }
+  box.innerHTML = sceneSVG(curSet, "0 0 360 240", false) + '<div style="font-size:13px;color:#8a6a4d;margin-top:6px">お手本：この絵になるように 並べ替えます</div>';
+  box.style.display = "block";
+  sndPick();
+});
+
+/* ================= 印刷 ================= */
+function fillPrint(){
+  $("ps-title").textContent = "トリック絵工房「" + SETS[curSet].name + "」";
+  $("ps-card").innerHTML = sceneSVG(curSet, "0 0 360 240", true)
+    .replace("<svg ", '<svg width="180mm" height="120mm" ');
+  $("ps-answer-art").innerHTML = sceneSVG(curSet, "0 0 360 240", false)
+    .replace("<svg ", '<svg width="62mm" height="41.3mm" ');
+}
+$("btn-print").addEventListener("click", () => { fillPrint(); setTimeout(() => window.print(), 60); });
+window.addEventListener("beforeprint", fillPrint);
+</script>
+</body>
+</html>
